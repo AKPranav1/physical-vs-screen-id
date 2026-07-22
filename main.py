@@ -17,6 +17,7 @@ Run:
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager # Added for lifespan
 import uuid
 
 from config import MIN_BURST_FRAMES, MAX_BURST_FRAMES, FLASH_CHALLENGE_REQUIRED
@@ -24,11 +25,23 @@ from schemas import VerifyDocumentRequest, VerifyDocumentResponse, DocTypeResult
 from utils.decoding import decode_burst, assert_consistent_resolution
 from utils.timing import StageTimer
 from utils.logging_calibration import log_calibration_row
-from utils.clip_engine import embed_image
+from utils.clip_engine import embed_image, _get_model as get_clip_model # Added CLIP model loader
 from doc_classification.pipeline import classify_document, sharpest_frame
 from pad_detection.pipeline import run_pad_pipeline
+from doc_classification.vlm_tiebreak import _get_model as get_vlm_model # Added VLM model loader
 
-app = FastAPI(title="ID Document Verification API", version="1.0.0")
+# --- Added Lifespan function for Eager Loading ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Pre-loading models into memory...")
+    get_clip_model() # Loads OpenCLIP
+    get_vlm_model()  # Loads Moondream2 VLM
+    print("All models pre-loaded and ready!")
+    yield
+# -------------------------------------------------
+
+# Attach the lifespan to the FastAPI app initialization
+app = FastAPI(title="ID Document Verification API", version="1.0.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
