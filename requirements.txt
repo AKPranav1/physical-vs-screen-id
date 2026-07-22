@@ -1,0 +1,33 @@
+# --- Web layer ---
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+
+# --- Core CV / math ---
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+scikit-image==0.24.0
+scipy==1.13.1
+
+# --- Deterministic document parsing (Layer 0) ---
+passporteye==2.2.2       # MRZ (passports / TD1 / TD3) — needs system tesseract-ocr binary
+pytesseract==0.3.13      # explicit dep so Windows can set tesseract_cmd path (see config.py)
+zxing-cpp==2.3.0        # PDF417 / barcode decode (AAMVA driver licenses) — self-contained wheel, no external DLL deps
+
+# --- OCR keyword layer (Layer 1) ---
+python-doctr[torch]==0.9.0
+
+# --- Zero-shot embeddings (Layer 2, used for BOTH doc-type and screen/physical vote) ---
+open_clip_torch==2.26.1
+torch==2.4.1
+torchvision==0.19.1
+
+# --- Rare tie-breaker VLM (Layer 3) ---
+transformers==4.45.1
+accelerate==0.34.2
+einops==0.8.0
+pillow==10.4.0
+
+# --- Utility ---
+python-dotenv==1.0.1

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ID Document Verification — Test Capture</title>
+<style>
+  :root {
+    --bg: #0e1116; --panel: #161b22; --border: #2a313c;
+    --text: #e6edf3; --muted: #8b96a5; --accent: #4f8cff;
+    --good: #3fb950; --bad: #f85149; --warn: #d29922;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center; padding: 32px 16px;
+  }
+  h1 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  p.sub { color: var(--muted); font-size: 13px; margin-top: 0; margin-bottom: 24px; }
+  .layout { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 1000px; width: 100%; }
+  
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; width: 480px; max-width: 100%;
+  }
+
+  .video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #000;
+  }
+  video {
+    width: 100%; 
+    display: block; 
+    background: #000;
+  }
+  .id-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 70%;
+    border: 3px dashed rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .id-guide span {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 14px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  #flashOverlay {
+    position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 999;
+    display: none; border-radius: 0;
+  }
+  button {
+    background: var(--accent); color: white; border: none; border-radius: 6px;
+    padding: 10px 16px; font-size: 14px; cursor: pointer; margin-top: 12px; width: 100%;
+  }
+  button:disabled { background: #33393f; cursor: not-allowed; }
+  .status { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  pre {
+    background: #0a0d12; border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; font-size: 12px; max-height: 500px; overflow: auto; white-space: pre-wrap;
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .badge.physical { background: rgba(63,185,80,0.15); color: var(--good); }
+  .badge.screen_recapture { background: rgba(248,81,73,0.15); color: var(--bad); }
+  .badge.manual_review { background: rgba(210,153,34,0.15); color: var(--warn); }
+</style>
+</head>
+<body>
+
+<h1>ID Document Verification — Test Capture</h1>
+<p class="sub">Hold your document up to the camera, then click Capture. A brief screen flash will fire mid-burst.</p>
+
+<div class="layout">
+  <div class="panel">
+    
+    <div class="video-container">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="id-guide">
+        <span>Keep the ID inside this frame</span>
+      </div>
+    </div>
+    
+    <button id="captureBtn">Capture Burst (~2s)</button>
+    <div class="status" id="status">Waiting for camera permission…</div>
+  </div>
+
+  <div class="panel">
+    <div id="resultSummary"></div>
+    <pre id="resultJson">Results will appear here after capture.</pre>
+  </div>
+</div>
+
+<div id="flashOverlay"></div>
+
+<script>
+const video = document.getElementById('video');
+const captureBtn = document.getElementById('captureBtn');
+const statusEl = document.getElementById('status');
+const resultJson = document.getElementById('resultJson');
+const resultSummary = document.getElementById('resultSummary');
+const flashOverlay = document.getElementById('flashOverlay');
+
+const API_URL = "http://127.0.0.1:8002/verify-document";
+const BURST_DURATION_MS = 2000;
+const FRAME_INTERVAL_MS = 80;    
+const FLASH_START_RATIO = 0.35;  
+const FLASH_DURATION_MS = 250;
+
+let stream = null;
+
+async function initCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+    video.srcObject = stream;
+    statusEl.textContent = "Camera ready.";
+  } catch (err) {
+    statusEl.textContent = "Camera access failed: " + err.message;
+  }
+}
+
+function captureFrameFromVideo() {
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runBurstCapture() {
+  captureBtn.disabled = true;
+  statusEl.textContent = "Capturing burst…";
+  resultJson.textContent = "Working…";
+
+  const frames = [];
+  const startTime = performance.now();
+  const flashStartAt = BURST_DURATION_MS * FLASH_START_RATIO;
+  const flashEndAt = flashStartAt + FLASH_DURATION_MS;
+
+  let flashTriggered = false;
+  let flashEnded = false;
+
+  while (performance.now() - startTime < BURST_DURATION_MS) {
+    const elapsed = performance.now() - startTime;
+
+    if (!flashTriggered && elapsed >= flashStartAt) {
+      flashOverlay.style.background = "white";
+      flashOverlay.style.display = "block";
+      flashTriggered = true;
+    }
+    if (flashTriggered && !flashEnded && elapsed >= flashEndAt) {
+      flashOverlay.style.display = "none";
+      flashEnded = true;
+    }
+
+    let flashState = "off";
+    if (flashTriggered && !flashEnded) flashState = "white";
+
+    frames.push({
+      image_b64: captureFrameFromVideo(),
+      timestamp_ms: elapsed,
+      screen_flash_state: flashState,
+    });
+
+    await sleep(FRAME_INTERVAL_MS);
+  }
+
+  flashOverlay.style.display = "none";
+  statusEl.textContent = `Captured ${frames.length} frames. Sending…`;
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frames }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      statusEl.textContent = "Error: " + (data.detail || resp.statusText);
+      resultJson.textContent = JSON.stringify(data, null, 2);
+    } else {
+      statusEl.textContent = "Done.";
+      const verdict = data.presentation.verdict;
+      resultSummary.innerHTML =
+        `<div><strong>${data.document.document_type}</strong> ` +
+        `(via ${data.document.source_layer}, conf ${data.document.confidence.toFixed(2)})</div>` +
+        `<div style="margin-top:6px">Presentation: <span class="badge ${verdict}">${verdict}</span> ` +
+        `(score ${data.presentation.fused_score.toFixed(2)})</div>`;
+      resultJson.textContent = JSON.stringify(data, null, 2);
+    }
+  } catch (err) {
+    statusEl.textContent = "Request failed: " + err.message;
+  }
+
+  captureBtn.disabled = false;
+}
+
+captureBtn.addEventListener('click', runBurstCapture);
+initCamera();
+</script>
+
+</body>
+</html>

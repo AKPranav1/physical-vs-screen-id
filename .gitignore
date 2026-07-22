@@ -1,0 +1,29 @@
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Environment Variables
+.env
+
+# Calibration Logs (prevents pushing your local webcam test data)
+calibration/*.csv
+
+# Large Model Weights (just in case they cache in the local directory)
+*.pt
+*.bin
+*.safetensors
+*.onnx
+
+# Packed Repository Data
+Id_scan.xml
+
+# IDEs and OS Files
+.vscode/
+.idea/
+.DS_Store
