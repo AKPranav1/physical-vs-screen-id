@@ -199,12 +199,45 @@ On first run, OpenCLIP, docTR, and the VLM each auto-download their pretrained w
 By default the app tries `DEVICE=cuda` (env var `ID_VERIFY_DEVICE`) and falls back to CPU automatically if no GPU is available; expect layer 3 (VLM) and CLIP to be substantially slower on CPU.
 
 ### Run
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-Then open `http://localhost:8000/static/index.html` with webcam access, click **Capture Burst**, and the JSON result (doc type + PAD verdict + full signal breakdown) renders in the page.
 
----
+## Local Quick Start (Testing)
+
+To run the API and test the webcam capture on your local machine without Docker, follow these steps:
+
+1. **Clone the Repository:**
+   ```bash
+   git clone [https://github.com/AKPranav1/physical-vs-screen-id.git](https://github.com/AKPranav1/physical-vs-screen-id.git)
+   cd physical-vs-screen-id
+
+```
+2. **Create and Activate a Virtual Environment:**
+*Mac/Linux:*
+```bash
+python3 -m venv venv
+source venv/bin/activate
+
+```
+*Windows:*
+```bash
+python -m venv venv
+venv\Scripts\activate
+
+```
+3. **Install Dependencies:**
+```bash
+pip install -r requirements.txt
+
+```
+4. **Run the Server:**
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+```
+5. **Test the Interface:**
+Open [http://localhost:8000/static/index.html](http://localhost:8000/static/index.html) in your web browser, grant webcam permissions, and click **Capture Burst**. The JSON result (doc type + PAD verdict + full signal breakdown) will render directly on the page.
+
+```
+```
 
 ## 6. Presentation-attack signal weights at a glance
 
