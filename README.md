@@ -211,12 +211,14 @@ To run the API and test the webcam capture on your local machine without Docker,
 
 ```
 2. **Create and Activate a Virtual Environment:**
+```bash
 *Mac/Linux:*
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-
 ```
+```
+
 *Windows:*
 ```bash
 python -m venv venv
