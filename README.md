@@ -30,60 +30,7 @@ This mirrors how production KYC systems (Onfido/Jumio/Veriff-style) are actually
 
 ## 2. Architecture
 
-```mermaid
-flowchart TD
-    subgraph Startup["main.py — startup (lifespan)"]
-        S0[Server boot] --> S1[Eager-load OpenCLIP]
-        S1 --> S2[Eager-load docTR OCR]
-        S2 --> S3[Eager-load Moondream2 VLM]
-        S3 --> S4["All models pre-loaded and ready!\n(app now accepts traffic)"]
-    end
-
-    subgraph Client["Browser (static/index.html)"]
-        A[Webcam burst capture\n~8-40 frames] --> B["Screen flash pulse\n(white -> off) mid-burst,\nframes labeled screen_flash_state"]
-        B --> C["POST /verify-document\nBurstFrame[] + session_id"]
-    end
-
-    subgraph API["main.py — request path"]
-        C --> D[decode_burst + resolution check\nutils/decoding.py]
-        D --> E[pick sharpest frame\nas representative_frame]
-        E --> F[embed_image via CLIP\ncomputed ONCE, shared]
-    end
-
-    subgraph DocType["doc_classification/pipeline.py — cascade"]
-        F --> G0[Layer 0: MRZ / barcode\nmrz_barcode.py]
-        G0 -->|no confident hit| G1[Layer 1: OCR keywords\nocr_doctr.py]
-        G1 -->|no confident hit| G2[Layer 2: CLIP zero-shot\nclip_zero_shot.py]
-        G2 -->|ambiguous margin| G3[Layer 3: Moondream2 VLM\nvlm_tiebreak.py]
-    end
-
-    subgraph PAD["pad_detection/pipeline.py — fusion"]
-        F --> H1[flash_challenge 0.30]
-        F --> H2[bezel_geometry 0.10]
-        F --> H3[specular_reflection 0.15]
-        F --> H4[color_whitepoint 0.12]
-        F --> H5[micro_parallax 0.13]
-        F --> H6[moire_fft 0.15]
-        F --> H7[texture_lbp 0.05]
-        H1 & H2 & H3 & H4 & H5 & H6 & H7 --> I[fuse_signals\nweighted sum, missing signal = 0.5 neutral]
-        F --> J[clip_vote.py\nphysical vs screen prompts]
-        I --> K["combine_with_clip_vote\n80% classical + 20% CLIP vote"]
-        J --> K
-        K --> L{ambiguous?\nin review band OR\nclassical vs CLIP disagree >0.35}
-        L -->|yes, rare| M[Moondream2 VLM tie-break\nvlm_pad_tiebreak.py\nre-fused 50/50]
-        L -->|no| N[final_verdict]
-        M --> N
-    end
-
-    S4 -.enables.-> C
-    G0 & G1 & G2 & G3 --> O[VerifyDocumentResponse]
-    N --> O
-    O --> P["log_calibration_row\n-> calibration/*.csv (gitignored)"]
-    O --> C
-
-    Q[config.py\nALL thresholds & weights] -.-> DocType
-    Q -.-> PAD
-```
+![System Architecture Diagram](assets/diagram.png)
 
 ### Module map
 
