@@ -30,7 +30,7 @@ This mirrors how production KYC systems (Onfido/Jumio/Veriff-style) are actually
 
 ## 2. Architecture
 
-![System Architecture Diagram](assets/diagram.png)
+![System Architecture Diagram](assets/architecture-diagram.svg)
 
 ### Module map
 

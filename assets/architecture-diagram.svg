@@ -1,0 +1,160 @@
+<svg width="1000" height="1560" viewBox="0 0 1000 1560" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>ID verification service architecture</title>
+<desc>Startup eager-loads three models, then client bursts are decoded, embedded once via CLIP, cascaded through a 4-layer document-type classifier and a 7-signal presentation-attack fusion pipeline, merged into a response, logged, and returned. A separate CI/CD path shows GitHub Actions deploying the Dockerized app.</desc>
+<style>
+  .t{font:400 14px sans-serif;fill:#2C2C2A;}
+  .ts{font:400 12px sans-serif;fill:#5F5E5A;}
+  .th{font:500 14px sans-serif;fill:#2C2C2A;}
+  .sec{font:500 13px sans-serif;fill:#2C2C2A;}
+  .box{fill:#F1EFE8;stroke:#5F5E5A;stroke-width:0.5;}
+  .arr{stroke:#5F5E5A;stroke-width:1.2;fill:none;}
+  .c-purple rect{fill:#EEEDFE;stroke:#534AB7;stroke-width:0.5;}
+  .c-purple text{fill:#26215C;}
+  .c-purple .ts{fill:#3C3489;}
+  .c-teal rect{fill:#E1F5EE;stroke:#0F6E56;stroke-width:0.5;}
+  .c-teal text{fill:#04342C;}
+  .c-teal .ts{fill:#085041;}
+  .c-coral rect{fill:#FAECE7;stroke:#993C1D;stroke-width:0.5;}
+  .c-coral text{fill:#4A1B0C;}
+  .c-coral .ts{fill:#712B13;}
+  .c-amber rect{fill:#FAEEDA;stroke:#854F0B;stroke-width:0.5;}
+  .c-amber text{fill:#412402;}
+  .c-amber .ts{fill:#633806;}
+  .c-gray rect{fill:#F1EFE8;stroke:#5F5E5A;stroke-width:0.5;}
+  .c-gray text{fill:#2C2C2A;}
+  .c-gray .ts{fill:#444441;}
+  @media (prefers-color-scheme: dark) {
+    svg{background:#1a1a18;}
+    .t,.th,.sec{fill:#EDEBE3;}
+    .ts{fill:#B4B2A9;}
+    .box{fill:#2C2C2A;stroke:#B4B2A9;}
+    .arr{stroke:#B4B2A9;}
+    .c-purple rect{fill:#3C3489;stroke:#AFA9EC;}
+    .c-purple text{fill:#EEEDFE;}
+    .c-purple .ts{fill:#CECBF6;}
+    .c-teal rect{fill:#085041;stroke:#5DCAA5;}
+    .c-teal text{fill:#E1F5EE;}
+    .c-teal .ts{fill:#9FE1CB;}
+    .c-coral rect{fill:#712B13;stroke:#F0997B;}
+    .c-coral text{fill:#FAECE7;}
+    .c-coral .ts{fill:#F5C4B3;}
+    .c-amber rect{fill:#633806;stroke:#EF9F27;}
+    .c-amber text{fill:#FAEEDA;}
+    .c-amber .ts{fill:#FAC775;}
+    .c-gray rect{fill:#444441;stroke:#B4B2A9;}
+    .c-gray text{fill:#F1EFE8;}
+    .c-gray .ts{fill:#D3D1C7;}
+  }
+</style>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- ============ SECTION 1: STARTUP ============ -->
+<text class="sec" x="40" y="30">Startup — main.py FastAPI lifespan (eager model loading, before traffic is accepted)</text>
+
+<g class="c-purple"><rect x="40" y="42" width="170" height="50" rx="8"/><text class="th" x="125" y="62" text-anchor="middle" dominant-baseline="central">Server boot</text></g>
+<line class="arr" x1="210" y1="67" x2="248" y2="67" marker-end="url(#arrow)"/>
+
+<g class="c-purple"><rect x="250" y="42" width="180" height="50" rx="8"/><text class="th" x="340" y="62" text-anchor="middle" dominant-baseline="central">Load OpenCLIP</text></g>
+<line class="arr" x1="430" y1="67" x2="468" y2="67" marker-end="url(#arrow)"/>
+
+<g class="c-purple"><rect x="470" y="42" width="170" height="50" rx="8"/><text class="th" x="555" y="62" text-anchor="middle" dominant-baseline="central">Load docTR OCR</text></g>
+<line class="arr" x1="640" y1="67" x2="678" y2="67" marker-end="url(#arrow)"/>
+
+<g class="c-purple"><rect x="680" y="42" width="180" height="50" rx="8"/><text class="th" x="770" y="62" text-anchor="middle" dominant-baseline="central">Load Moondream2 VLM</text></g>
+<line class="arr" x1="860" y1="67" x2="898" y2="67" marker-end="url(#arrow)"/>
+
+<g class="c-amber"><rect x="880" y="20" width="100" height="94" rx="8"/><text class="ts" x="930" y="55" text-anchor="middle" dominant-baseline="central">Ready —</text><text class="ts" x="930" y="72" text-anchor="middle" dominant-baseline="central">accepts</text><text class="ts" x="930" y="89" text-anchor="middle" dominant-baseline="central">traffic</text></g>
+
+<!-- ============ SECTION 2: CLIENT + DECODE ============ -->
+<text class="sec" x="40" y="150">Request path</text>
+
+<g class="c-gray"><rect x="300" y="162" width="400" height="56" rx="8"/><text class="th" x="500" y="180" text-anchor="middle" dominant-baseline="central">Browser burst capture</text><text class="ts" x="500" y="200" text-anchor="middle" dominant-baseline="central">8-40 frames, white/off flash pulse mid-burst</text></g>
+<line class="arr" x1="500" y1="218" x2="500" y2="248" marker-end="url(#arrow)"/>
+
+<g class="c-gray"><rect x="300" y="250" width="400" height="44" rx="8"/><text class="th" x="500" y="272" text-anchor="middle" dominant-baseline="central">POST /verify-document</text></g>
+<line class="arr" x1="500" y1="294" x2="500" y2="324" marker-end="url(#arrow)"/>
+
+<g class="c-gray"><rect x="300" y="326" width="400" height="56" rx="8"/><text class="th" x="500" y="344" text-anchor="middle" dominant-baseline="central">decode_burst + resolution check</text><text class="ts" x="500" y="364" text-anchor="middle" dominant-baseline="central">utils/decoding.py</text></g>
+<line class="arr" x1="500" y1="382" x2="500" y2="412" marker-end="url(#arrow)"/>
+
+<g class="c-gray"><rect x="300" y="414" width="400" height="44" rx="8"/><text class="th" x="500" y="436" text-anchor="middle" dominant-baseline="central">Pick sharpest frame (representative_frame)</text></g>
+<line class="arr" x1="500" y1="458" x2="500" y2="488" marker-end="url(#arrow)"/>
+
+<g class="c-amber"><rect x="270" y="490" width="460" height="56" rx="8"/><text class="th" x="500" y="508" text-anchor="middle" dominant-baseline="central">Shared CLIP embedding (computed once)</text><text class="ts" x="500" y="528" text-anchor="middle" dominant-baseline="central">reused by doc-type layer 2 and the PAD CLIP vote</text></g>
+
+<!-- fork lines -->
+<path class="arr" d="M320 546 C 320 580, 270 580, 270 610" marker-end="url(#arrow)"/>
+<path class="arr" d="M680 546 C 680 580, 730 580, 730 610" marker-end="url(#arrow)"/>
+
+<!-- ============ SECTION 3a: DOC TYPE CASCADE (left) ============ -->
+<text class="sec" x="60" y="600">Document-type cascade — doc_classification/pipeline.py</text>
+
+<g class="c-teal"><rect x="60" y="612" width="420" height="56" rx="8"/><text class="th" x="270" y="630" text-anchor="middle" dominant-baseline="central">Layer 0 — MRZ + barcode</text><text class="ts" x="270" y="650" text-anchor="middle" dominant-baseline="central">deterministic, checksum-validated</text></g>
+<line class="arr" x1="270" y1="668" x2="270" y2="696" marker-end="url(#arrow)"/>
+<text class="ts" x="286" y="686">no confident hit</text>
+
+<g class="c-teal"><rect x="60" y="698" width="420" height="56" rx="8"/><text class="th" x="270" y="716" text-anchor="middle" dominant-baseline="central">Layer 1 — OCR keywords (docTR)</text><text class="ts" x="270" y="736" text-anchor="middle" dominant-baseline="central">printed header keyword match</text></g>
+<line class="arr" x1="270" y1="754" x2="270" y2="782" marker-end="url(#arrow)"/>
+<text class="ts" x="286" y="772">no confident hit</text>
+
+<g class="c-teal"><rect x="60" y="784" width="420" height="56" rx="8"/><text class="th" x="270" y="802" text-anchor="middle" dominant-baseline="central">Layer 2 — CLIP zero-shot</text><text class="ts" x="270" y="822" text-anchor="middle" dominant-baseline="central">open-vocabulary, margin-gated</text></g>
+<line class="arr" x1="270" y1="840" x2="270" y2="868" marker-end="url(#arrow)"/>
+<text class="ts" x="270" y="858" text-anchor="middle">ambiguous margin</text>
+
+<g class="c-teal"><rect x="60" y="870" width="420" height="56" rx="8"/><text class="th" x="270" y="888" text-anchor="middle" dominant-baseline="central">Layer 3 — Moondream2 VLM tie-break</text><text class="ts" x="270" y="908" text-anchor="middle" dominant-baseline="central">rare fallback, free-text answer</text></g>
+<line class="arr" x1="270" y1="926" x2="270" y2="1000" marker-end="url(#arrow)"/>
+
+<!-- ============ SECTION 3b: PAD FUSION (right) ============ -->
+<text class="sec" x="520" y="600">Presentation attack detection — pad_detection/pipeline.py</text>
+
+<g class="c-coral"><rect x="520" y="612" width="420" height="70" rx="8"/><text class="th" x="730" y="628" text-anchor="middle" dominant-baseline="central">7 classical PAD signals</text><text class="ts" x="730" y="646" text-anchor="middle" dominant-baseline="central">flash .30 · bezel .10 · specular .15 · color .12</text><text class="ts" x="730" y="662" text-anchor="middle" dominant-baseline="central">parallax .13 · moire .15 · texture .05</text></g>
+<line class="arr" x1="730" y1="682" x2="730" y2="710" marker-end="url(#arrow)"/>
+
+<g class="c-coral"><rect x="520" y="712" width="420" height="56" rx="8"/><text class="th" x="730" y="730" text-anchor="middle" dominant-baseline="central">fuse_signals — weighted sum</text><text class="ts" x="730" y="750" text-anchor="middle" dominant-baseline="central">unfired signal contributes neutral 0.5</text></g>
+<line class="arr" x1="730" y1="768" x2="730" y2="796" marker-end="url(#arrow)"/>
+
+<g class="c-coral"><rect x="520" y="798" width="420" height="56" rx="8"/><text class="th" x="730" y="816" text-anchor="middle" dominant-baseline="central">+ CLIP zero-shot secondary vote</text><text class="ts" x="730" y="836" text-anchor="middle" dominant-baseline="central">80% classical fusion + 20% CLIP vote</text></g>
+<line class="arr" x1="730" y1="854" x2="730" y2="882" marker-end="url(#arrow)"/>
+
+<g class="c-coral"><rect x="520" y="884" width="420" height="56" rx="8"/><text class="th" x="730" y="900" text-anchor="middle" dominant-baseline="central">Ambiguous? (review band, or</text><text class="ts" x="730" y="920" text-anchor="middle" dominant-baseline="central">classical vs. CLIP disagree &gt; 0.35)</text></g>
+<line class="arr" x1="730" y1="940" x2="730" y2="1000" marker-end="url(#arrow)"/>
+<text class="ts" x="746" y="972">yes → VLM tie-break, re-fused 50/50</text>
+<text class="ts" x="746" y="988">no → straight to final_verdict</text>
+
+<!-- ============ SECTION 4: MERGE + RESPONSE ============ -->
+<g class="c-amber"><rect x="60" y="1002" width="420" height="44" rx="8"/><text class="th" x="270" y="1024" text-anchor="middle" dominant-baseline="central">DocTypeResult — type, confidence, layer</text></g>
+<g class="c-amber"><rect x="520" y="1002" width="420" height="44" rx="8"/><text class="th" x="730" y="1024" text-anchor="middle" dominant-baseline="central">PadResult — verdict, fused score, signals</text></g>
+
+<path class="arr" d="M270 1046 C 270 1080, 500 1080, 500 1080" marker-end="none"/>
+<path class="arr" d="M730 1046 C 730 1080, 500 1080, 500 1080" marker-end="none"/>
+<line class="arr" x1="500" y1="1080" x2="500" y2="1096" marker-end="url(#arrow)"/>
+
+<g class="c-gray"><rect x="300" y="1098" width="400" height="44" rx="8"/><text class="th" x="500" y="1120" text-anchor="middle" dominant-baseline="central">VerifyDocumentResponse + stage_timings_ms</text></g>
+<line class="arr" x1="500" y1="1142" x2="500" y2="1170" marker-end="url(#arrow)"/>
+
+<g class="c-gray"><rect x="300" y="1172" width="400" height="56" rx="8"/><text class="th" x="500" y="1190" text-anchor="middle" dominant-baseline="central">log_calibration_row</text><text class="ts" x="500" y="1210" text-anchor="middle" dominant-baseline="central">calibration/*.csv — git-ignored, local only</text></g>
+<line class="arr" x1="500" y1="1228" x2="500" y2="1256" marker-end="url(#arrow)"/>
+
+<g class="c-gray"><rect x="300" y="1258" width="400" height="44" rx="8"/><text class="th" x="500" y="1280" text-anchor="middle" dominant-baseline="central">Response returned to browser</text></g>
+
+<!-- ============ SECTION 5: CI/CD ============ -->
+<text class="sec" x="40" y="1360">Deployment — Dockerfile + .github/workflows/deploy.yml</text>
+
+<g class="c-purple"><rect x="40" y="1372" width="210" height="50" rx="8"/><text class="th" x="145" y="1392" text-anchor="middle" dominant-baseline="central">git push to main</text></g>
+<line class="arr" x1="250" y1="1397" x2="288" y2="1397" marker-end="url(#arrow)"/>
+
+<g class="c-purple"><rect x="290" y="1372" width="230" height="50" rx="8"/><text class="th" x="405" y="1392" text-anchor="middle" dominant-baseline="central">GitHub Actions workflow</text></g>
+<line class="arr" x1="520" y1="1397" x2="558" y2="1397" marker-end="url(#arrow)"/>
+
+<g class="c-purple"><rect x="560" y="1372" width="230" height="50" rx="8"/><text class="th" x="675" y="1392" text-anchor="middle" dominant-baseline="central">SSH into server, git pull</text></g>
+<line class="arr" x1="790" y1="1397" x2="828" y2="1397" marker-end="url(#arrow)"/>
+
+<g class="c-purple"><rect x="830" y="1372" width="130" height="50" rx="8"/><text class="ts" x="895" y="1390" text-anchor="middle" dominant-baseline="central">docker build,</text><text class="ts" x="895" y="1405" text-anchor="middle" dominant-baseline="central">restart :7860</text></g>
+
+<text class="ts" x="40" y="1450">8GB+ RAM recommended on the server — Moondream2 stays resident (~3.7GB) for the life of the eager-loaded process.</text>
+<text class="ts" x="40" y="1470">Mount a persistent volume for the Hugging Face cache to avoid re-downloading model weights on every container restart.</text>
+</svg>
