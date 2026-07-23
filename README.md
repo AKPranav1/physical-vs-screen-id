@@ -248,3 +248,26 @@ This is calibration (tuning a handful of numbers against your own reference capt
 - **Layer 0 (MRZ/barcode)** requires `tesseract-ocr` and `libzbar0` system packages; without them it returns `None` and the cascade falls through, still working but without the deterministic fast path.
 - All thresholds in `config.py` are reasonable starting points, **not final** — run the calibration pass in Section 7 against your own webcam/lighting setup before trusting this in a real verification flow.
 - The VLM tie-break (Moondream2) is lazy-loaded on first use, so the very first ambiguous request in a fresh process will be noticeably slower while it loads into memory/VRAM.
+
+## 9. Server Deployment & CI/CD Setup
+
+This repository is configured for automated deployment to a dedicated server using Docker and GitHub Actions.
+
+### Continuous Deployment (GitHub Actions)
+An automated deployment pipeline is included in `.github/workflows/deploy.yml`[cite: 3]. To activate this CI/CD pipeline, the deployment team must add the following secrets to the GitHub repository settings (**Settings -> Secrets and variables -> Actions**):
+* `SERVER_HOST`: The public IP address of the target server[cite: 3].
+* `SERVER_USERNAME`: The SSH username (e.g., `ubuntu`)[cite: 3].
+* `SERVER_SSH_KEY`: The private SSH key for server access[cite: 3].
+
+Once these secrets are configured and the repository is initially cloned onto the server at `~/physical-vs-screen-id`, any pushes to the `main` branch will automatically pull the latest code, rebuild the Docker image, and restart the container[cite: 3]. *(Note: The GitHub Action will intentionally fail on push until these secrets are securely added).*
+
+### Hardware Requirements
+* **Memory (RAM):** The server should be provisioned with at least **8 GB of RAM**. To eliminate cold-start latency, the application eager-loads the Moondream2 VLM on server startup, which permanently occupies approximately 3.7 GB of memory[cite: 3]. 
+
+### Docker & Model Caching
+* **Port Mapping:** The provided `Dockerfile` exposes port `7860`[cite: 3]. 
+* **Caching Model Weights:** The open-weight models (OpenCLIP, docTR, Moondream2) download automatically on the first run[cite: 3]. To prevent the server from redownloading gigabytes of data every time the container restarts, it is strictly recommended to mount a persistent volume for the Hugging Face cache.
+
+**Recommended Docker Run Command:**
+```bash
+docker run -d --name id-verify-container -p 7860:7860 -v ~/.cache/huggingface:/home/user/.cache/huggingface id-verify-api

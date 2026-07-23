@@ -29,12 +29,14 @@ from utils.clip_engine import embed_image, _get_model as get_clip_model # Added 
 from doc_classification.pipeline import classify_document, sharpest_frame
 from pad_detection.pipeline import run_pad_pipeline
 from doc_classification.vlm_tiebreak import _get_model as get_vlm_model # Added VLM model loader
+from doc_classification.ocr_doctr import _get_model as get_doctr_model
 
 # --- Added Lifespan function for Eager Loading ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Pre-loading models into memory...")
     get_clip_model() # Loads OpenCLIP
+    get_doctr_model()  # Loads docTR OCR
     get_vlm_model()  # Loads Moondream2 VLM
     print("All models pre-loaded and ready!")
     yield

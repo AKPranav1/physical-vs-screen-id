@@ -36,16 +36,21 @@ def _extract_text(image: np.ndarray) -> str:
     import tempfile
     import os
 
+    # 1. Open the temp file, get the name, and immediately close the OS handle
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-        cv2.imwrite(tmp.name, image)
         tmp_path = tmp.name
+        tmp.close()
 
     try:
+        # 2. Now that the handle is free, write the image and let docTR read it
+        cv2.imwrite(tmp_path, image)
         doc = DocumentFile.from_images(tmp_path)
         result = _get_model()(doc)
         text = result.render()
     finally:
-        os.unlink(tmp_path)
+        # 3. Clean up safely
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
     return text.lower()
 

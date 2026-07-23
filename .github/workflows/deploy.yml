@@ -1,0 +1,37 @@
+name: Deploy ID Verification API to Company Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: SSH into Server and Deploy
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          # Navigate to your project directory (update this path to match your server)
+          cd ~/physical-vs-screen-id
+          
+          # Pull the latest changes from the main branch
+          git pull origin main
+          
+          # Build the new Docker image based on your included Dockerfile
+          docker build -t id-verify-api .
+          
+          # Stop and remove the old container if it exists
+          docker stop id-verify-container || true
+          docker rm id-verify-container || true
+          
+          # Run the new container, mapping the 7860 port defined in your Dockerfile
+          docker run -d --name id-verify-container -p 7860:7860 id-verify-api

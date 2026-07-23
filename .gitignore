@@ -22,6 +22,7 @@ calibration/*.csv
 
 # Packed Repository Data
 Id_scan.xml
+repomix-output.xml
 
 # IDEs and OS Files
 .vscode/

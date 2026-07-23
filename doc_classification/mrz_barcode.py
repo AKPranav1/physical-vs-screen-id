@@ -30,17 +30,21 @@ def try_parse_mrz(image: np.ndarray) -> Optional[dict]:
     except (ImportError, OSError):
         return None
 
-    # passporteye needs a file path
+    # 1. Open the temp file, get the name, and immediately close the OS handle
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-        cv2.imwrite(tmp.name, image)
         tmp_path = tmp.name
+        tmp.close()
 
     try:
+        # 2. Now that the handle is free, write the image and let PassportEye read it
+        cv2.imwrite(tmp_path, image)
         mrz = read_mrz(tmp_path)
     except Exception:
         return None
     finally:
-        os.unlink(tmp_path)
+        # 3. Clean up safely
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
     if mrz is None:
         return None
